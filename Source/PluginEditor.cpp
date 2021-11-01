@@ -25,13 +25,13 @@ void LookAndFeel::drawRotarySlider(juce::Graphics & g,
 	
 	Colour strokeColour = Colour(255u, 0u, 0u);
 	Colour fillColour = Colour(20u, 20u, 20u);
-
+	
 	g.setColour(fillColour);
 	g.fillEllipse(bounds);
 	
 	g.setColour(strokeColour);
 	g.drawEllipse(bounds, 1.f);
-
+	
 	if(auto* rswl = dynamic_cast<RotarySliderWithLabels*>(&slider))
 	{
 		auto center = bounds.getCentre();
@@ -66,10 +66,10 @@ void LookAndFeel::drawRotarySlider(juce::Graphics & g,
 		
 		g.setColour(Colours::white);
 		g.drawFittedText(text, r.toNearestInt(), juce::Justification::centred, 1);
-	
+		
 	}
 	
-
+	
 }// drawRotarySlider
 
 
@@ -88,10 +88,10 @@ void RotarySliderWithLabels::paint(juce::Graphics &g)
 	
 	
 	// Bounding Boxes around knobs
-//	g.setColour(Colours::blue);
-//	g.drawRect(getLocalBounds());
-//	g.setColour(Colours::yellow);
-//	g.drawRect(sliderBounds);
+	//	g.setColour(Colours::blue);
+	//	g.drawRect(getLocalBounds());
+	//	g.setColour(Colours::yellow);
+	//	g.drawRect(sliderBounds);
 	
 	getLookAndFeel().drawRotarySlider(g,
 									  sliderBounds.getX(),
@@ -129,28 +129,28 @@ void RotarySliderWithLabels::paint(juce::Graphics &g)
 		g.drawFittedText(str, r.toNearestInt(), juce::Justification::centred, 1);
 		//Point<float>::getPointOnCircumference(radius, <#float angle#>);
 	}
-//	g.drawFittedText(text, r.toNearestInt(), juce::Justification::centred, 1);
-
+	//	g.drawFittedText(text, r.toNearestInt(), juce::Justification::centred, 1);
+	
 	
 }// paint()
 
 juce::Rectangle<int> RotarySliderWithLabels::getSliderBounds() const
- {
-	 auto bounds = getLocalBounds();
-	 
-	 auto size = juce::jmin(bounds.getWidth(), bounds.getHeight());
-	 
-	 size -= getTextHeight()*2;
-	 
-	 juce::Rectangle<int> r;
-	 r.setSize(size, size);
-	 r.setCentre(bounds.getCentreX(), 0);
-	 r.setY(2);
-	 
-	 return r;
-	 
-	 
- }// getSliderBounds()
+{
+	auto bounds = getLocalBounds();
+	
+	auto size = juce::jmin(bounds.getWidth(), bounds.getHeight());
+	
+	size -= getTextHeight()*2;
+	
+	juce::Rectangle<int> r;
+	r.setSize(size, size);
+	r.setCentre(bounds.getCentreX(), 0);
+	r.setY(2);
+	
+	return r;
+	
+	
+}// getSliderBounds()
 
 
 juce::String RotarySliderWithLabels::getDisplayString() const
@@ -253,8 +253,8 @@ void PathProducer::process(juce::Rectangle<float> fftBounds, double sampleRate)
 	}// while left
 	
 	// If there are FFT data buffers to pull
-		// If we can pull a buffer
-			// generate a path
+	// If we can pull a buffer
+	// generate a path
 	const auto fftSize = leftChannelFFTDataGenerator.getFFTSize();
 	
 	const auto binWidth = sampleRate / (double)fftSize;
@@ -269,8 +269,8 @@ void PathProducer::process(juce::Rectangle<float> fftBounds, double sampleRate)
 	}// while
 	
 	// While there are paths to be pulled
-		// Pull as many as possible
-			// display most recent path
+	// Pull as many as possible
+	// display most recent path
 	while (pathProducer.getNumPathsAvailable() )
 	{
 		pathProducer.getPath(leftChannelFFTPath);
@@ -290,19 +290,21 @@ void ResponseCurveComponent::timerCallback()
 	{
 		//update the monochain
 		updateChain();
-
+		
 	}// if parametersChanged
 	
-
+	
 	repaint();
 }// timeCallback()
 
 void ResponseCurveComponent::updateChain()
 {
-	//DBG( "params changed" );
-	
-	
 	auto chainSettings = getChainSettings(audioProcessor.apvts);
+	
+	monoChain.setBypassed<ChainPositions::LowCut>(chainSettings.lowCutBypassed);
+	monoChain.setBypassed<ChainPositions::HighCut>(chainSettings.highCutBypassed);
+	monoChain.setBypassed<ChainPositions::Peak>(chainSettings.peakBypassed);
+	
 	auto peakCoefficients = makePeakFilter(chainSettings, audioProcessor.getSampleRate());
 	updateCoefficients(monoChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
 	
@@ -345,24 +347,30 @@ void ResponseCurveComponent::paint (juce::Graphics& g)
 		if(! monoChain.isBypassed<ChainPositions::Peak>() )
 			mag *= peak.coefficients->getMagnitudeForFrequency(freq, sampleRate);
 		
-		if( !lowcut.isBypassed<0>() )
-			mag *= lowcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-		if( !lowcut.isBypassed<1>() )
-			mag *= lowcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-		if( !lowcut.isBypassed<2>() )
-			mag *= lowcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-		if( !lowcut.isBypassed<3>() )
-			mag *= lowcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+		if ( !monoChain.isBypassed<ChainPositions::LowCut>() )
+		{
+			
+			if( !lowcut.isBypassed<0>() )
+				mag *= lowcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+			if( !lowcut.isBypassed<1>() )
+				mag *= lowcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+			if( !lowcut.isBypassed<2>() )
+				mag *= lowcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+			if( !lowcut.isBypassed<3>() )
+				mag *= lowcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+		}
 		
-		if( !highcut.isBypassed<0>() )
-			mag *= highcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-		if( !highcut.isBypassed<1>() )
-			mag *= highcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-		if( !highcut.isBypassed<2>() )
-			mag *= highcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-		if( !highcut.isBypassed<3>() )
-			mag *= highcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-		
+		if ( !monoChain.isBypassed<ChainPositions::HighCut>() )
+		{
+			if( !highcut.isBypassed<0>() )
+				mag *= highcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+			if( !highcut.isBypassed<1>() )
+				mag *= highcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+			if( !highcut.isBypassed<2>() )
+				mag *= highcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+			if( !highcut.isBypassed<3>() )
+				mag *= highcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+		}
 		mags[i] = Decibels::gainToDecibels(mag);
 	}
 	
@@ -558,7 +566,12 @@ peakQualitySliderAttachment(audioProcessor.apvts, "Peak Quality", peakQualitySli
 lowCutFreqSliderAttachment(audioProcessor.apvts, "LowCut Freq", lowCutFreqSlider),
 highCutFreqSliderAttachment(audioProcessor.apvts, "HighCut Freq", highCutFreqSlider),
 lowCutSlopeSliderAttachment(audioProcessor.apvts, "LowCut Slope", lowCutSlopeSlider),
-highCutSlopeSliderAttachment(audioProcessor.apvts, "HighCut Slope", highCutSlopeSlider)
+highCutSlopeSliderAttachment(audioProcessor.apvts, "HighCut Slope", highCutSlopeSlider),
+
+lowcutBypassButtonAttachment(audioProcessor.apvts, "LowCut Bypassed", lowcutBypassButton),
+highcutBypassButtonAttachment(audioProcessor.apvts, "HighCut Bypassed", highcutBypassButton),
+peakBypassButtonAttachment(audioProcessor.apvts, "Peak Bypassed", peakBypassButton),
+analyzerEnabledButtonAttachment(audioProcessor.apvts, "Analyzer Enabled", analyzerEnabledButton)
 {
 	// Make sure that before the constructor has finished, you've set the
 	// editor's size to whatever you need it to be.
@@ -618,13 +631,16 @@ void SimpleEQAudioProcessorEditor::resized()
 	auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
 	auto highCutArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
 	
+	lowcutBypassButton.setBounds(lowCutArea.removeFromTop(25));
 	lowCutFreqSlider.setBounds(lowCutArea.removeFromTop(lowCutArea.getHeight() * 0.5));
 	lowCutSlopeSlider.setBounds(lowCutArea);
 	
+	highcutBypassButton.setBounds(highCutArea.removeFromTop(25));
 	highCutFreqSlider.setBounds(highCutArea.removeFromTop(highCutArea.getHeight() * 0.5));
 	highCutSlopeSlider.setBounds(highCutArea);
 	
 	
+	peakBypassButton.setBounds(bounds.removeFromTop(25));
 	peakFreqSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.33));
 	peakGainSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.5));
 	peakQualitySlider.setBounds(bounds);
@@ -643,6 +659,11 @@ std::vector<juce::Component*> SimpleEQAudioProcessorEditor::getComps()
 		&highCutFreqSlider,
 		&lowCutSlopeSlider,
 		&highCutSlopeSlider,
-		&responseCurveComponent
+		&responseCurveComponent,
+		
+		&lowcutBypassButton,
+		&highcutBypassButton,
+		&peakBypassButton,
+		&analyzerEnabledButton
 	};
 }// getComps()
