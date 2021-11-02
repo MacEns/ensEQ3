@@ -26,10 +26,12 @@ void LookAndFeel::drawRotarySlider(juce::Graphics & g,
 	Colour strokeColour = Colour(255u, 0u, 0u);
 	Colour fillColour = Colour(20u, 20u, 20u);
 	
-	g.setColour(fillColour);
+	auto enabled = slider.isEnabled();
+	
+	g.setColour(enabled ? fillColour : Colours::black);
 	g.fillEllipse(bounds);
 	
-	g.setColour(strokeColour);
+	g.setColour(enabled ? strokeColour : Colours::dimgrey);
 	g.drawEllipse(bounds, 1.f);
 	
 	if(auto* rswl = dynamic_cast<RotarySliderWithLabels*>(&slider))
@@ -78,9 +80,9 @@ void LookAndFeel::drawToggleButton(juce::Graphics &g,
 								   bool shouldDrawButtonAsDown)
 {
 	using namespace juce;
-	
-//	if( auto* pb = dynamic_cast<PowerButton*>(&toggleButton) )
-//	{
+	// if PowerButton
+	if( auto* pb = dynamic_cast<PowerButton*>(&toggleButton) )
+	{
 		Path powerButton;
 		
 		auto bounds = toggleButton.getLocalBounds();
@@ -90,7 +92,7 @@ void LookAndFeel::drawToggleButton(juce::Graphics &g,
 	auto w = bounds.getWidth();
 	auto h = bounds.getHeight();
 	
-		float ang = 30.f; //30.f;
+		float ang = 30.f;
 		
 		size -= 6;
 		
@@ -118,18 +120,20 @@ void LookAndFeel::drawToggleButton(juce::Graphics &g,
 		g.setColour(color);
 		g.strokePath(powerButton, pst);
 		//g.drawEllipse(r, 2);
-//	}// if
-//	else if( auto* analyzerButton = dynamic_cast<AnalyzerButton*>(&toggleButton) )
-//	{
-//		auto color = ! toggleButton.getToggleState() ? Colours::dimgrey : Colour(0u, 172u, 1u);
-//
-//		g.setColour(color);
-//
-//		auto bounds = toggleButton.getLocalBounds();
-//		g.drawRect(bounds);
-//
-//		g.strokePath(analyzerButton->randomPath, PathStrokeType(1.f));
-//	}// else if
+	}// if
+	
+	// Else if AnalyzerButton
+	else if( auto* analyzerButton = dynamic_cast<AnalyzerButton*>(&toggleButton) )
+	{
+		auto color = ! toggleButton.getToggleState() ? Colours::dimgrey : Colour(0u, 172u, 1u);
+
+		g.setColour(color);
+
+		auto bounds = toggleButton.getLocalBounds();
+		g.drawRect(bounds);
+
+		g.strokePath(analyzerButton->randomPath, PathStrokeType(1.f));
+	}// else if
 }// drawToggleButton()
 
 //==============================================================================
@@ -339,20 +343,20 @@ void PathProducer::process(juce::Rectangle<float> fftBounds, double sampleRate)
 
 void ResponseCurveComponent::timerCallback()
 {
-	auto fftBounds = getAnalysisArea().toFloat();
-	auto sampleRate = audioProcessor.getSampleRate();
 	
-	leftPathProducer.process(fftBounds, sampleRate);
-	rightPathProducer.process(fftBounds, sampleRate);
+	if( shouldShowFFTAnalysis)
+	{
+		auto fftBounds = getAnalysisArea().toFloat();
+		auto sampleRate = audioProcessor.getSampleRate();
+		
+		leftPathProducer.process(fftBounds, sampleRate);
+		rightPathProducer.process(fftBounds, sampleRate);
+	}
 	
 	if( parametersChanged.compareAndSetBool(false, true) )
 	{
-		//update the monochain
 		updateChain();
-		
 	}// if parametersChanged
-	
-	
 	repaint();
 }// timeCallback()
 
@@ -449,17 +453,21 @@ void ResponseCurveComponent::paint (juce::Graphics& g)
 		responseCurve.lineTo(responseArea.getX() + i, map(mags[i]));
 	}
 	
-	auto leftChannelFFTPath = leftPathProducer.getPath();
-	leftChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
+	if( shouldShowFFTAnalysis )
+	{
+		auto leftChannelFFTPath = leftPathProducer.getPath();
+		leftChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
+		
+		g.setColour(Colours::green);
+		g.strokePath(leftChannelFFTPath, PathStrokeType(1.f));
+		
+		auto rightChannelFFTPath = rightPathProducer.getPath();
+		rightChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
+		
+		g.setColour(Colours::yellow);
+		g.strokePath(rightChannelFFTPath, PathStrokeType(1.f));
+	}
 	
-	g.setColour(Colours::green);
-	g.strokePath(leftChannelFFTPath, PathStrokeType(1.f));
-	
-	auto rightChannelFFTPath = rightPathProducer.getPath();
-	rightChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
-	
-	g.setColour(Colours::yellow);
-	g.strokePath(rightChannelFFTPath, PathStrokeType(1.f));
 	
 	g.setColour(Colours::orange);
 	g.drawRoundedRectangle(getRenderArea().toFloat(), 4.f, 1.f);
@@ -660,8 +668,55 @@ analyzerEnabledButtonAttachment(audioProcessor.apvts, "Analyzer Enabled", analyz
 	peakBypassButton.setLookAndFeel(&lnf);
 	lowcutBypassButton.setLookAndFeel(&lnf);
 	highcutBypassButton.setLookAndFeel(&lnf);
+	analyzerEnabledButton.setLookAndFeel(&lnf);
 	
-	setSize (800, 600);
+	
+	auto safePtr = juce::Component::SafePointer<SimpleEQAudioProcessorEditor>(this);
+		peakBypassButton.onClick = [safePtr]()
+		{
+			if( auto* comp = safePtr.getComponent() )
+			{
+				auto bypassed = comp->peakBypassButton.getToggleState();
+				
+				comp->peakFreqSlider.setEnabled( !bypassed );
+				comp->peakGainSlider.setEnabled( !bypassed );
+				comp->peakQualitySlider.setEnabled( !bypassed );
+			}
+		};// peakBypassButton
+		
+
+		lowcutBypassButton.onClick = [safePtr]()
+		{
+			if( auto* comp = safePtr.getComponent() )
+			{
+				auto bypassed = comp->lowcutBypassButton.getToggleState();
+				
+				comp->lowCutFreqSlider.setEnabled( !bypassed );
+				comp->lowCutSlopeSlider.setEnabled( !bypassed );
+			}
+		};// lowcutBypassButton
+		
+		highcutBypassButton.onClick = [safePtr]()
+		{
+			if( auto* comp = safePtr.getComponent() )
+			{
+				auto bypassed = comp->highcutBypassButton.getToggleState();
+				
+				comp->highCutFreqSlider.setEnabled( !bypassed );
+				comp->highCutSlopeSlider.setEnabled( !bypassed );
+			}
+		};// highcutBypassButton
+
+		analyzerEnabledButton.onClick = [safePtr]()
+		{
+			if( auto* comp = safePtr.getComponent() )
+			{
+				auto enabled = comp->analyzerEnabledButton.getToggleState();
+				comp->responseCurveComponent.toggleAnalysisEnablement(enabled);
+			}
+		};
+	
+	setSize (600, 600);
 }// Constructor()
 
 SimpleEQAudioProcessorEditor::~SimpleEQAudioProcessorEditor()
@@ -669,6 +724,7 @@ SimpleEQAudioProcessorEditor::~SimpleEQAudioProcessorEditor()
 	peakBypassButton.setLookAndFeel(nullptr);
 	lowcutBypassButton.setLookAndFeel(nullptr);
 	highcutBypassButton.setLookAndFeel(nullptr);
+	analyzerEnabledButton.setLookAndFeel(nullptr);
 }// Destructor()
 
 //==============================================================================
@@ -686,6 +742,14 @@ void SimpleEQAudioProcessorEditor::resized()
 	// subcomponents in your editor..
 	
 	auto bounds = getLocalBounds();
+	
+	auto analyzerEnabledArea = bounds.removeFromTop(25);
+	analyzerEnabledArea.setWidth(100);
+	analyzerEnabledArea.setX(5);
+	analyzerEnabledArea.removeFromTop(2);
+	
+	analyzerEnabledButton.setBounds(analyzerEnabledArea);
+	
 	float hRatio = 25.f / 100.f; //JUCE_LIVE_CONSTANT(33) / 100.f;
 	auto responseArea = bounds.removeFromTop(bounds.getHeight() * hRatio);
 	
