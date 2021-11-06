@@ -4,7 +4,29 @@
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
               cppLanguageStandard="17">
   <MAINGROUP id="mLkDoV" name="SimpleEQ">
+    <GROUP id="{19B6A170-E462-ECC0-D5F7-AD47F86EA871}" name="Assets">
+      <FILE id="vi47ZG" name="light1off.png" compile="0" resource="1" file="../../Images/Lights/light1off.png"/>
+      <FILE id="Hzql2h" name="light1on.png" compile="0" resource="1" file="../../Images/Lights/light1on.png"/>
+      <FILE id="e47Ic7" name="light2off.png" compile="0" resource="1" file="../../Images/Lights/light2off.png"/>
+      <FILE id="CJ9siL" name="light2on.png" compile="0" resource="1" file="../../Images/Lights/light2on.png"/>
+      <FILE id="sRbjrT" name="Knob3a.png" compile="0" resource="1" file="../../Images/Knobs/Knob3a.png"/>
+      <FILE id="IZg2uG" name="Knob3b.png" compile="0" resource="1" file="../../Images/Knobs/Knob3b.png"/>
+      <FILE id="HSC3qz" name="Knob3c.png" compile="0" resource="1" file="../../Images/Knobs/Knob3c.png"/>
+      <FILE id="EjCmhc" name="toggle3off.png" compile="0" resource="1" file="../../Images/Toggles/toggle3off.png"/>
+      <FILE id="zpLyii" name="toggle3on.png" compile="0" resource="1" file="../../Images/Toggles/toggle3on.png"/>
+      <FILE id="JeiKnF" name="bg.png" compile="0" resource="1" file="../../Images/Toggles/bg.png"/>
+    </GROUP>
     <GROUP id="{ACD659E3-714C-15FC-3274-ED17C5F5DD9E}" name="Source">
+      <FILE id="Yhzemk" name="SlidingToggleLNF.cpp" compile="1" resource="0"
+            file="Source/SlidingToggleLNF.cpp"/>
+      <FILE id="FjQKP5" name="SlidingToggleLNF.h" compile="0" resource="0"
+            file="Source/SlidingToggleLNF.h"/>
+      <FILE id="BJUd3f" name="SlidingToggleWithLight.cpp" compile="1" resource="0"
+            file="Source/SlidingToggleWithLight.cpp"/>
+      <FILE id="XeNjPr" name="SlidingToggleWithLight.h" compile="0" resource="0"
+            file="Source/SlidingToggleWithLight.h"/>
+      <FILE id="QN3vnU" name="KnobSlider.cpp" compile="1" resource="0" file="Source/KnobSlider.cpp"/>
+      <FILE id="yhTFkD" name="KnobSlider.h" compile="0" resource="0" file="Source/KnobSlider.h"/>
       <FILE id="HpDN8X" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="HsGm1H" name="PluginProcessor.h" compile="0" resource="0"
@@ -12,6 +34,10 @@
       <FILE id="EEBfUs" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="Xsrhz5" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="pO70wY" name="KnobSliderLookAndFeel.cpp" compile="1" resource="0"
+            file="Source/KnobSliderLookAndFeel.cpp"/>
+      <FILE id="ViFA5c" name="KnobSliderLookAndFeel.h" compile="0" resource="0"
+            file="Source/KnobSliderLookAndFeel.h"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>

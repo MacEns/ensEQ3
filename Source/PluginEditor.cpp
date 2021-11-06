@@ -9,6 +9,9 @@
 #include "PluginEditor.h"
 
 
+//==============================================================================
+
+
 void LookAndFeel::drawRotarySlider(juce::Graphics & g,
 								   int x,
 								   int y,
@@ -36,36 +39,37 @@ void LookAndFeel::drawRotarySlider(juce::Graphics & g,
 	
 	if(auto* rswl = dynamic_cast<RotarySliderWithLabels*>(&slider))
 	{
+		
 		auto center = bounds.getCentre();
-		
+
 		Path p;
-		
+
 		Rectangle<float> r;
 		r.setLeft(center.getX() - 2);
 		r.setRight(center.getX() + 2);
 		r.setTop(bounds.getY());
 		r.setBottom(center.getY() - rswl->getTextHeight() * 1.5);
-		
+
 		p.addRoundedRectangle(r, 2.f);
-		
+
 		jassert(rotaryStartAngle < rotaryEndAngle);
-		
+
 		auto sliderAngRad = jmap(sliderPosProportional, 0.f, 1.f, rotaryStartAngle, rotaryEndAngle);
-		
+
 		p.applyTransform(AffineTransform().rotated(sliderAngRad, center.getX(), center.getY()));
-		
+
 		g.fillPath(p);
-		
+
 		g.setFont(rswl->getTextHeight());
 		auto text = rswl->getDisplayString();
 		auto strWidth = g.getCurrentFont().getStringWidth(text);
-		
+
 		r.setSize(strWidth + 4, rswl->getTextHeight() + 2);
 		r.setCentre(bounds.getCentre());
-		
+
 		g.setColour(Colours::black);
 		g.fillRect(r);
-		
+
 		g.setColour(Colours::white);
 		g.drawFittedText(text, r.toNearestInt(), juce::Justification::centred, 1);
 		
@@ -134,6 +138,9 @@ void LookAndFeel::drawToggleButton(juce::Graphics &g,
 
 		g.strokePath(analyzerButton->randomPath, PathStrokeType(1.f));
 	}// else if
+	else {
+		printf("Not power button or analyzer button.\n");
+	}
 }// drawToggleButton()
 
 //==============================================================================
@@ -211,8 +218,6 @@ juce::Rectangle<int> RotarySliderWithLabels::getSliderBounds() const
 	r.setY(2);
 	
 	return r;
-	
-	
 }// getSliderBounds()
 
 
@@ -617,13 +622,13 @@ juce::Rectangle<int> ResponseCurveComponent::getAnalysisArea()
 //==============================================================================
 SimpleEQAudioProcessorEditor::SimpleEQAudioProcessorEditor (SimpleEQAudioProcessor& p)
 : AudioProcessorEditor (&p), audioProcessor (p),
-peakFreqSlider(*audioProcessor.apvts.getParameter("Peak Freq"), "Hz"),
-peakGainSlider(*audioProcessor.apvts.getParameter("Peak Gain"), "dB"),
-peakQualitySlider(*audioProcessor.apvts.getParameter("Peak Quality"), ""),
-lowCutFreqSlider(*audioProcessor.apvts.getParameter("LowCut Freq"), "Hz"),
-highCutFreqSlider(*audioProcessor.apvts.getParameter("HighCut Freq"), "Hz"),
-lowCutSlopeSlider(*audioProcessor.apvts.getParameter("LowCut Slope"), "dB/Oct"),
-highCutSlopeSlider(*audioProcessor.apvts.getParameter("HighCut Slope"), "dB/Oct"),
+peakFreqSlider(*audioProcessor.apvts.getParameter("Peak Freq"), "Hz", true),
+peakGainSlider(*audioProcessor.apvts.getParameter("Peak Gain"), "dB", false),
+peakQualitySlider(*audioProcessor.apvts.getParameter("Peak Quality"), "", true),
+lowCutFreqSlider(*audioProcessor.apvts.getParameter("LowCut Freq"), "Hz", true),
+highCutFreqSlider(*audioProcessor.apvts.getParameter("HighCut Freq"), "Hz", true),
+lowCutSlopeSlider(*audioProcessor.apvts.getParameter("LowCut Slope"), "dB/Oct", false),
+highCutSlopeSlider(*audioProcessor.apvts.getParameter("HighCut Slope"), "dB/Oct", false),
 
 
 responseCurveComponent(audioProcessor),
@@ -665,9 +670,9 @@ analyzerEnabledButtonAttachment(audioProcessor.apvts, "Analyzer Enabled", analyz
 		addAndMakeVisible(comp);
 	}
 	
-	peakBypassButton.setLookAndFeel(&lnf);
-	lowcutBypassButton.setLookAndFeel(&lnf);
-	highcutBypassButton.setLookAndFeel(&lnf);
+	peakBypassButton.setLookAndFeel(&slidingToggleLNF);
+	lowcutBypassButton.setLookAndFeel(&slidingToggleLNF);
+	highcutBypassButton.setLookAndFeel(&slidingToggleLNF);
 	analyzerEnabledButton.setLookAndFeel(&lnf);
 	
 	
@@ -716,6 +721,8 @@ analyzerEnabledButtonAttachment(audioProcessor.apvts, "Analyzer Enabled", analyz
 			}
 		};
 	
+	bg = juce::ImageCache::getFromMemory(BinaryData::bg_png, BinaryData::bg_pngSize);
+
 	setSize (600, 600);
 }// Constructor()
 
@@ -733,6 +740,7 @@ void SimpleEQAudioProcessorEditor::paint (juce::Graphics& g)
 	using namespace juce;
 	// (Our component is opaque, so we must completely fill the background with a solid colour)
 	g.fillAll (Colours::black);
+	g.drawImage(bg, 0, 170, getWidth(), getHeight()-170, 0, 0, bg.getWidth(), bg.getHeight());
 }// paint()
 
 void SimpleEQAudioProcessorEditor::resized()
@@ -760,16 +768,18 @@ void SimpleEQAudioProcessorEditor::resized()
 	auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
 	auto highCutArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
 	
-	lowcutBypassButton.setBounds(lowCutArea.removeFromTop(25));
+	lowcutBypassButton.setBounds(lowCutArea.removeFromTop(45));
 	lowCutFreqSlider.setBounds(lowCutArea.removeFromTop(lowCutArea.getHeight() * 0.5));
 	lowCutSlopeSlider.setBounds(lowCutArea);
 	
-	highcutBypassButton.setBounds(highCutArea.removeFromTop(25));
+	highcutBypassButton.setBounds(highCutArea.removeFromTop(45));
 	highCutFreqSlider.setBounds(highCutArea.removeFromTop(highCutArea.getHeight() * 0.5));
 	highCutSlopeSlider.setBounds(highCutArea);
 	
 	
-	peakBypassButton.setBounds(bounds.removeFromTop(25));
+	peakBypassButton.setBounds(bounds.removeFromTop(45));
+	bounds.removeFromTop(10);
+	bounds.removeFromBottom(5);
 	peakFreqSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.33));
 	peakGainSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.5));
 	peakQualitySlider.setBounds(bounds);

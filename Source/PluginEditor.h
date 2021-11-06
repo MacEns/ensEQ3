@@ -7,6 +7,8 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "KnobSlider.h"
+#include "SlidingToggleWithLight.h"
 
 
 //==============================================================================================================================================
@@ -189,6 +191,7 @@ struct LookAndFeel : juce::LookAndFeel_V4
 						  bool shouldDrawButtonAsHighlighted,
 						  bool shouldDrawButtonAsDown) override;
 	
+private:
 	
 };// LookAndFeel
 
@@ -349,14 +352,22 @@ struct AnalyzerButton : juce::ToggleButton
 	 // access the processor object that created it.
 	 SimpleEQAudioProcessor& audioProcessor;
 
-	 RotarySliderWithLabels peakFreqSlider,
+//	 RotarySliderWithLabels peakFreqSlider,
+//	 peakGainSlider,
+//	 peakQualitySlider;
+	//lowCutFreqSlider,
+	//highCutFreqSlider,
+	 //lowCutSlopeSlider,
+	 //highCutSlopeSlider;
+
+	 KnobSlider peakFreqSlider,
 	 peakGainSlider,
-	peakQualitySlider,
-	lowCutFreqSlider,
-	highCutFreqSlider,
+	 peakQualitySlider,
+	 lowCutFreqSlider,
+	 highCutFreqSlider,
 	 lowCutSlopeSlider,
 	 highCutSlopeSlider;
-
+	 
 	 ResponseCurveComponent responseCurveComponent;
 
 	 using APVTS = juce::AudioProcessorValueTreeState;
@@ -370,7 +381,7 @@ struct AnalyzerButton : juce::ToggleButton
 				lowCutSlopeSliderAttachment,
 				 highCutSlopeSliderAttachment;
 	 
-	 PowerButton lowcutBypassButton, peakBypassButton, highcutBypassButton;
+	 SlidingToggleWithLight lowcutBypassButton, peakBypassButton, highcutBypassButton;
 	 AnalyzerButton analyzerEnabledButton;
 	 
 	 using ButtonAttachment = APVTS::ButtonAttachment;
@@ -383,7 +394,9 @@ struct AnalyzerButton : juce::ToggleButton
 	 std::vector<juce::Component*> getComps();
 	 
 	 LookAndFeel lnf;
-
+	 SlidingToggleLNF slidingToggleLNF;
+	 
+	 juce::Image bg;
 
 	 JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleEQAudioProcessorEditor)
  };
